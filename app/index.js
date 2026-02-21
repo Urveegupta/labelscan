@@ -182,6 +182,12 @@ export default function HomeScreen() {
               </TouchableOpacity>
             )}
             <TouchableOpacity
+              style={styles.webNavTextLink}
+              onPress={() => router.push('/methodology')}
+            >
+              <Text style={styles.webNavTextLinkText}>How we rate</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               style={styles.webNavLink}
               onPress={() => router.push('/add-product')}
             >
@@ -416,6 +422,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     color: Colors.primary,
+    ...WEB_FONT,
+  },
+  webNavTextLink: {
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    cursor: 'pointer',
+  },
+  webNavTextLinkText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: Colors.textSecondary,
     ...WEB_FONT,
   },
   webNavLink: {
