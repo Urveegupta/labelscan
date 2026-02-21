@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { initDatabase, seedDatabase } from '../src/database/database';
 import Colors from '../src/constants/colors';
+
+const isWeb = Platform.OS === 'web';
 
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
@@ -18,7 +20,7 @@ export default function RootLayout() {
       } catch (err) {
         console.error('Database init error:', err);
         setError(err.message);
-        setReady(true); // Still render the app even if DB fails
+        setReady(true);
       }
     }
     init();
@@ -38,11 +40,17 @@ export default function RootLayout() {
       <StatusBar style="dark" />
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: Colors.surface },
+          headerStyle: isWeb
+            ? { backgroundColor: '#FFFFFF', height: 56 }
+            : { backgroundColor: Colors.surface },
           headerTintColor: Colors.primary,
-          headerTitleStyle: { fontWeight: '600', color: Colors.text },
-          headerShadowVisible: false,
-          contentStyle: { backgroundColor: Colors.background },
+          headerTitleStyle: {
+            fontWeight: '600',
+            color: Colors.text,
+            ...(isWeb ? { fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' } : {}),
+          },
+          headerShadowVisible: isWeb,
+          contentStyle: { backgroundColor: isWeb ? '#FAFAFA' : Colors.background },
         }}
       />
     </>

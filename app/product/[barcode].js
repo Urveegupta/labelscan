@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Image,
+  Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +17,11 @@ import { lookupProduct } from '../../src/api/productService';
 import ScoreBadge from '../../src/components/ScoreBadge';
 import IngredientList from '../../src/components/IngredientList';
 import NutritionBreakdown from '../../src/components/NutritionBreakdown';
+
+const isWeb = Platform.OS === 'web';
+const F = isWeb
+  ? { fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }
+  : {};
 
 export default function ProductDetailScreen() {
   const { barcode } = useLocalSearchParams();
@@ -42,7 +48,7 @@ export default function ProductDetailScreen() {
       <View style={styles.centered}>
         <Stack.Screen options={{ title: 'Loading...' }} />
         <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={styles.loadingText}>{strings.loading}</Text>
+        <Text style={[styles.loadingText, F]}>{strings.loading}</Text>
       </View>
     );
   }
@@ -52,9 +58,9 @@ export default function ProductDetailScreen() {
       <View style={styles.centered}>
         <Stack.Screen options={{ title: 'Not Found' }} />
         <Ionicons name="alert-circle-outline" size={64} color={Colors.textMuted} />
-        <Text style={styles.notFoundTitle}>{strings.productNotFound}</Text>
-        <Text style={styles.notFoundMessage}>{strings.productNotFoundMessage}</Text>
-        <Text style={styles.barcodeText}>Barcode: {barcode}</Text>
+        <Text style={[styles.notFoundTitle, F]}>{strings.productNotFound}</Text>
+        <Text style={[styles.notFoundMessage, F]}>{strings.productNotFoundMessage}</Text>
+        <Text style={[styles.barcodeText, F]}>Barcode: {barcode}</Text>
 
         <View style={styles.notFoundActions}>
           <TouchableOpacity
@@ -62,7 +68,7 @@ export default function ProductDetailScreen() {
             onPress={() => router.push({ pathname: '/add-product', params: { barcode } })}
           >
             <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
-            <Text style={styles.primaryButtonText}>{strings.addProduct}</Text>
+            <Text style={[styles.primaryButtonText, F]}>{strings.addProduct}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -70,7 +76,7 @@ export default function ProductDetailScreen() {
             onPress={() => router.push('/scanner')}
           >
             <Ionicons name="barcode-outline" size={20} color={Colors.primary} />
-            <Text style={styles.secondaryButtonText}>{strings.scanAgain}</Text>
+            <Text style={[styles.secondaryButtonText, F]}>{strings.scanAgain}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -78,98 +84,90 @@ export default function ProductDetailScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.container} contentContainerStyle={isWeb ? styles.webScroll : undefined} showsVerticalScrollIndicator={false}>
       <Stack.Screen
         options={{
           title: product.name,
-          headerTitleStyle: { fontSize: 16, fontWeight: '600' },
+          headerTitleStyle: { fontSize: 16, fontWeight: '600', ...F },
         }}
       />
 
-      {/* Hero Section */}
-      <View style={styles.hero}>
-        {product.image_url && (
-          <Image
-            source={{ uri: product.image_url }}
-            style={styles.productImage}
-            resizeMode="contain"
-          />
-        )}
-        <View style={styles.heroContent}>
-          <ScoreBadge grade={score.grade} score={score.score} size="large" />
-          <Text style={styles.productName}>{product.name}</Text>
-          <Text style={styles.productBrand}>{product.brand}</Text>
-          {source && (
-            <View style={styles.sourceTag}>
-              <Ionicons name="information-circle-outline" size={14} color={Colors.textMuted} />
-              <Text style={styles.sourceText}>{strings.source[source] || source}</Text>
-            </View>
+      <View style={isWeb ? styles.webContent : undefined}>
+        {/* Hero Section */}
+        <View style={styles.hero}>
+          {product.image_url && (
+            <Image
+              source={{ uri: product.image_url }}
+              style={styles.productImage}
+              resizeMode="contain"
+            />
           )}
+          <View style={styles.heroContent}>
+            <ScoreBadge grade={score.grade} score={score.score} size="large" />
+            <Text style={[styles.productName, F]}>{product.name}</Text>
+            <Text style={[styles.productBrand, F]}>{product.brand}</Text>
+            {source && (
+              <View style={styles.sourceTag}>
+                <Ionicons name="information-circle-outline" size={14} color={Colors.textMuted} />
+                <Text style={[styles.sourceText, F]}>{strings.source[source] || source}</Text>
+              </View>
+            )}
+          </View>
         </View>
-      </View>
 
-      {/* Score Breakdown */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Score Breakdown</Text>
-        <View style={styles.scoreBar}>
-          <ScoreBarItem label="Additives" penalty={score.penalties.additive} max={40} />
-          <ScoreBarItem label="Nutrition" penalty={score.penalties.nutrition} max={30} />
-          <ScoreBarItem label="Processing" penalty={score.penalties.processing} max={15} />
-        </View>
-        <View style={styles.statsRow}>
-          <StatBadge
-            value={score.stats.totalIngredients}
-            label="Ingredients"
-            color={Colors.textSecondary}
-          />
-          <StatBadge
-            value={score.stats.harmfulAdditives}
-            label="Harmful"
-            color={score.stats.harmfulAdditives > 0 ? Colors.harmful : Colors.good}
-          />
-          <StatBadge
-            value={score.stats.concerningAdditives}
-            label="Concerning"
-            color={score.stats.concerningAdditives > 0 ? Colors.concerning : Colors.good}
-          />
-        </View>
-      </View>
-
-      {/* Nutrition */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{strings.nutritionBreakdown}</Text>
-        <NutritionBreakdown breakdown={score.nutritionBreakdown} />
-      </View>
-
-      {/* Ingredients */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>
-          {strings.ingredients} ({score.ingredients.length})
-        </Text>
-        <Text style={styles.cardHint}>Tap flagged ingredients for details</Text>
-        <IngredientList ingredients={score.ingredients} />
-      </View>
-
-      {/* Raw ingredients text */}
-      {product.ingredients_text && (
+        {/* Score Breakdown */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Label Text</Text>
-          <Text style={styles.rawText}>{product.ingredients_text}</Text>
+          <Text style={[styles.cardTitle, F]}>Score Breakdown</Text>
+          <View style={styles.scoreBar}>
+            <ScoreBarItem label="Additives" penalty={score.penalties.additive} max={40} />
+            <ScoreBarItem label="Nutrition" penalty={score.penalties.nutrition} max={30} />
+            <ScoreBarItem label="Processing" penalty={score.penalties.processing} max={15} />
+          </View>
+          <View style={styles.statsRow}>
+            <StatBadge value={score.stats.totalIngredients} label="Ingredients" color={Colors.textSecondary} />
+            <StatBadge value={score.stats.harmfulAdditives} label="Harmful" color={score.stats.harmfulAdditives > 0 ? Colors.harmful : Colors.good} />
+            <StatBadge value={score.stats.concerningAdditives} label="Concerning" color={score.stats.concerningAdditives > 0 ? Colors.concerning : Colors.good} />
+          </View>
         </View>
-      )}
 
-      {/* Actions */}
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => router.push('/scanner')}
-        >
-          <Ionicons name="barcode-outline" size={20} color={Colors.primary} />
-          <Text style={styles.actionButtonText}>{strings.scanAgain}</Text>
-        </TouchableOpacity>
+        {/* Nutrition */}
+        <View style={styles.card}>
+          <Text style={[styles.cardTitle, F]}>{strings.nutritionBreakdown}</Text>
+          <NutritionBreakdown breakdown={score.nutritionBreakdown} />
+        </View>
+
+        {/* Ingredients */}
+        <View style={styles.card}>
+          <Text style={[styles.cardTitle, F]}>
+            {strings.ingredients} ({score.ingredients.length})
+          </Text>
+          <Text style={[styles.cardHint, F]}>
+            {isWeb ? 'Click' : 'Tap'} flagged ingredients for details
+          </Text>
+          <IngredientList ingredients={score.ingredients} />
+        </View>
+
+        {/* Raw ingredients text */}
+        {product.ingredients_text && (
+          <View style={styles.card}>
+            <Text style={[styles.cardTitle, F]}>Label Text</Text>
+            <Text style={[styles.rawText, F]}>{product.ingredients_text}</Text>
+          </View>
+        )}
+
+        {/* Actions */}
+        <View style={styles.actions}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => router.push('/scanner')}
+          >
+            <Ionicons name="barcode-outline" size={20} color={Colors.primary} />
+            <Text style={[styles.actionButtonText, F]}>{strings.scanAgain}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.bottomPadding} />
       </View>
-
-      <View style={styles.bottomPadding} />
     </ScrollView>
   );
 }
@@ -181,8 +179,8 @@ function ScoreBarItem({ label, penalty, max }) {
   return (
     <View style={styles.scoreBarItem}>
       <View style={styles.scoreBarLabelRow}>
-        <Text style={styles.scoreBarLabel}>{label}</Text>
-        <Text style={styles.scoreBarValue}>-{penalty}/{max}</Text>
+        <Text style={[styles.scoreBarLabel, F]}>{label}</Text>
+        <Text style={[styles.scoreBarValue, F]}>-{penalty}/{max}</Text>
       </View>
       <View style={styles.scoreBarTrack}>
         <View style={[styles.scoreBarFill, { width: `${pct}%`, backgroundColor: barColor }]} />
@@ -194,8 +192,8 @@ function ScoreBarItem({ label, penalty, max }) {
 function StatBadge({ value, label, color }) {
   return (
     <View style={styles.statBadge}>
-      <Text style={[styles.statValue, { color }]}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      <Text style={[styles.statValue, { color }, F]}>{value}</Text>
+      <Text style={[styles.statLabel, F]}>{label}</Text>
     </View>
   );
 }
@@ -203,13 +201,21 @@ function StatBadge({ value, label, color }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: isWeb ? '#FAFAFA' : Colors.background,
+  },
+  webScroll: {
+    alignItems: 'center',
+  },
+  webContent: {
+    width: '100%',
+    maxWidth: 640,
+    paddingBottom: 40,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: isWeb ? '#FAFAFA' : Colors.background,
     padding: 40,
   },
   loadingText: {
@@ -233,7 +239,7 @@ const styles = StyleSheet.create({
   barcodeText: {
     fontSize: 13,
     color: Colors.textMuted,
-    fontFamily: 'monospace',
+    fontFamily: isWeb ? 'SFMono-Regular, Menlo, Consolas, monospace' : 'monospace',
     marginTop: 12,
     backgroundColor: Colors.divider,
     paddingHorizontal: 12,
@@ -244,6 +250,7 @@ const styles = StyleSheet.create({
     marginTop: 28,
     gap: 12,
     width: '100%',
+    maxWidth: 320,
   },
   primaryButton: {
     flexDirection: 'row',
@@ -251,8 +258,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: Colors.primary,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 10,
     gap: 8,
+    ...(isWeb ? { cursor: 'pointer' } : {}),
   },
   primaryButtonText: {
     color: '#FFFFFF',
@@ -263,11 +271,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: Colors.primary,
+    borderWidth: 1,
+    borderColor: Colors.border,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 10,
     gap: 8,
+    backgroundColor: '#FFFFFF',
+    ...(isWeb ? { cursor: 'pointer' } : {}),
   },
   secondaryButtonText: {
     color: Colors.primary,
@@ -277,17 +287,25 @@ const styles = StyleSheet.create({
 
   // Hero
   hero: {
-    backgroundColor: Colors.surface,
-    paddingTop: 8,
-    paddingBottom: 24,
+    backgroundColor: '#FFFFFF',
+    paddingTop: isWeb ? 32 : 8,
+    paddingBottom: 28,
     alignItems: 'center',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    ...(isWeb ? {
+      borderRadius: 16,
+      marginTop: 24,
+      marginHorizontal: 16,
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+    } : {
+      borderBottomLeftRadius: 24,
+      borderBottomRightRadius: 24,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    }),
   },
   productImage: {
     width: 120,
@@ -300,7 +318,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   productName: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '700',
     color: Colors.text,
     textAlign: 'center',
@@ -316,7 +334,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     marginTop: 10,
-    backgroundColor: Colors.background,
+    backgroundColor: isWeb ? '#F3F4F6' : Colors.background,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
@@ -328,16 +346,21 @@ const styles = StyleSheet.create({
 
   // Cards
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: '#FFFFFF',
     marginHorizontal: 16,
     marginTop: 16,
-    borderRadius: 16,
-    padding: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    borderRadius: isWeb ? 12 : 16,
+    padding: 20,
+    ...(isWeb ? {
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+    } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.04,
+      shadowRadius: 4,
+      elevation: 1,
+    }),
   },
   cardTitle: {
     fontSize: 17,
@@ -353,9 +376,7 @@ const styles = StyleSheet.create({
   },
 
   // Score breakdown
-  scoreBarItem: {
-    marginBottom: 10,
-  },
+  scoreBarItem: { marginBottom: 10 },
   scoreBarLabelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -373,7 +394,7 @@ const styles = StyleSheet.create({
   },
   scoreBarTrack: {
     height: 6,
-    backgroundColor: Colors.divider,
+    backgroundColor: isWeb ? '#F3F4F6' : Colors.divider,
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -387,15 +408,10 @@ const styles = StyleSheet.create({
     marginTop: 14,
     paddingTop: 14,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.divider,
+    borderTopColor: isWeb ? '#E5E7EB' : Colors.divider,
   },
-  statBadge: {
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 22,
-    fontWeight: '700',
-  },
+  statBadge: { alignItems: 'center' },
+  statValue: { fontSize: 22, fontWeight: '700' },
   statLabel: {
     fontSize: 12,
     color: Colors.textMuted,
@@ -418,12 +434,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.surface,
+    backgroundColor: '#FFFFFF',
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 10,
     gap: 8,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: isWeb ? '#E5E7EB' : Colors.border,
+    ...(isWeb ? { cursor: 'pointer' } : {}),
   },
   actionButtonText: {
     color: Colors.primary,
@@ -431,7 +448,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  bottomPadding: {
-    height: 40,
-  },
+  bottomPadding: { height: 40 },
 });

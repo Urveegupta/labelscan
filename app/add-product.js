@@ -18,6 +18,11 @@ import { submitProduct } from '../src/database/database';
 import { scoreProduct } from '../src/engine/scoringEngine';
 import ScoreBadge from '../src/components/ScoreBadge';
 
+const isWeb = Platform.OS === 'web';
+const F = isWeb
+  ? { fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }
+  : {};
+
 export default function AddProductScreen() {
   const { barcode: initialBarcode } = useLocalSearchParams();
   const router = useRouter();
@@ -42,7 +47,11 @@ export default function AddProductScreen() {
 
   async function handleSubmit() {
     if (!barcode.trim() || !name.trim()) {
-      Alert.alert('Missing Info', 'Please enter at least the barcode and product name.');
+      if (isWeb) {
+        window.alert('Please enter at least the barcode and product name.');
+      } else {
+        Alert.alert('Missing Info', 'Please enter at least the barcode and product name.');
+      }
       return;
     }
 
@@ -55,18 +64,33 @@ export default function AddProductScreen() {
         ingredients_text: ingredients.trim(),
       });
 
-      Alert.alert('Success', strings.submittedSuccess, [
-        {
-          text: 'View Product',
-          onPress: () => router.replace(`/product/${barcode.trim()}`),
-        },
-        {
-          text: 'Done',
-          onPress: () => router.back(),
-        },
-      ]);
+      if (isWeb) {
+        const viewProduct = window.confirm(
+          strings.submittedSuccess + '\n\nClick OK to view the product, or Cancel to go back.'
+        );
+        if (viewProduct) {
+          router.replace(`/product/${barcode.trim()}`);
+        } else {
+          router.back();
+        }
+      } else {
+        Alert.alert('Success', strings.submittedSuccess, [
+          {
+            text: 'View Product',
+            onPress: () => router.replace(`/product/${barcode.trim()}`),
+          },
+          {
+            text: 'Done',
+            onPress: () => router.back(),
+          },
+        ]);
+      }
     } catch (err) {
-      Alert.alert('Error', 'Failed to save product. Please try again.');
+      if (isWeb) {
+        window.alert('Failed to save product. Please try again.');
+      } else {
+        Alert.alert('Error', 'Failed to save product. Please try again.');
+      }
     }
     setSubmitting(false);
   }
@@ -84,117 +108,121 @@ export default function AddProductScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <Ionicons name="create-outline" size={32} color={Colors.primary} />
-          <Text style={styles.headerTitle}>Add a New Product</Text>
-          <Text style={styles.headerDesc}>
-            Help build our database by adding products you scan.
-            Enter the details exactly as they appear on the label.
-          </Text>
-        </View>
-
-        {/* Form */}
-        <View style={styles.form}>
-          <View style={styles.field}>
-            <Text style={styles.label}>{strings.barcode} *</Text>
-            <TextInput
-              style={[styles.input, initialBarcode ? styles.inputDisabled : null]}
-              value={barcode}
-              onChangeText={setBarcode}
-              placeholder="e.g. 8901058811001"
-              placeholderTextColor={Colors.textMuted}
-              keyboardType="numeric"
-              editable={!initialBarcode}
-            />
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>{strings.productName} *</Text>
-            <TextInput
-              style={styles.input}
-              value={name}
-              onChangeText={setName}
-              placeholder="e.g. Maggi 2-Minute Noodles"
-              placeholderTextColor={Colors.textMuted}
-            />
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>{strings.brandName}</Text>
-            <TextInput
-              style={styles.input}
-              value={brand}
-              onChangeText={setBrand}
-              placeholder="e.g. Nestle"
-              placeholderTextColor={Colors.textMuted}
-            />
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>{strings.ingredientsList}</Text>
-            <Text style={styles.fieldHint}>
-              Copy ingredients exactly from the label, separated by commas
+        <View style={styles.inner}>
+          <View style={styles.header}>
+            <View style={styles.headerIcon}>
+              <Ionicons name="create-outline" size={isWeb ? 24 : 32} color={Colors.primary} />
+            </View>
+            <Text style={[styles.headerTitle, F]}>Add a New Product</Text>
+            <Text style={[styles.headerDesc, F]}>
+              Help build our database by adding products you scan.
+              Enter the details exactly as they appear on the label.
             </Text>
-            <TextInput
-              style={[styles.input, styles.inputMultiline]}
-              value={ingredients}
-              onChangeText={setIngredients}
-              onBlur={handlePreview}
-              placeholder="e.g. Wheat Flour (Maida), Sugar, Palm Oil, Salt, INS 503, INS 322..."
-              placeholderTextColor={Colors.textMuted}
-              multiline
-              numberOfLines={5}
-              textAlignVertical="top"
-            />
           </View>
-        </View>
 
-        {/* Live Preview */}
-        {preview && (
-          <View style={styles.previewCard}>
-            <Text style={styles.previewTitle}>Score Preview</Text>
-            <View style={styles.previewContent}>
-              <ScoreBadge grade={preview.grade} score={preview.score} size="small" />
-              <View style={styles.previewStats}>
-                <Text style={styles.previewStat}>
-                  {preview.stats.totalIngredients} ingredients detected
-                </Text>
-                {preview.stats.harmfulAdditives > 0 && (
-                  <Text style={[styles.previewStat, { color: Colors.harmful }]}>
-                    {preview.stats.harmfulAdditives} harmful additive(s)
-                  </Text>
-                )}
-                {preview.stats.concerningAdditives > 0 && (
-                  <Text style={[styles.previewStat, { color: Colors.concerning }]}>
-                    {preview.stats.concerningAdditives} concerning additive(s)
-                  </Text>
-                )}
-              </View>
+          {/* Form */}
+          <View style={styles.form}>
+            <View style={styles.field}>
+              <Text style={[styles.label, F]}>{strings.barcode} *</Text>
+              <TextInput
+                style={[styles.input, F, initialBarcode ? styles.inputDisabled : null]}
+                value={barcode}
+                onChangeText={setBarcode}
+                placeholder="e.g. 8901058811001"
+                placeholderTextColor="#B0B0B0"
+                keyboardType="numeric"
+                editable={!initialBarcode}
+              />
+            </View>
+
+            <View style={styles.field}>
+              <Text style={[styles.label, F]}>{strings.productName} *</Text>
+              <TextInput
+                style={[styles.input, F]}
+                value={name}
+                onChangeText={setName}
+                placeholder="e.g. Maggi 2-Minute Noodles"
+                placeholderTextColor="#B0B0B0"
+              />
+            </View>
+
+            <View style={styles.field}>
+              <Text style={[styles.label, F]}>{strings.brandName}</Text>
+              <TextInput
+                style={[styles.input, F]}
+                value={brand}
+                onChangeText={setBrand}
+                placeholder="e.g. Nestle"
+                placeholderTextColor="#B0B0B0"
+              />
+            </View>
+
+            <View style={styles.field}>
+              <Text style={[styles.label, F]}>{strings.ingredientsList}</Text>
+              <Text style={[styles.fieldHint, F]}>
+                Copy ingredients exactly from the label, separated by commas
+              </Text>
+              <TextInput
+                style={[styles.input, styles.inputMultiline, F]}
+                value={ingredients}
+                onChangeText={setIngredients}
+                onBlur={handlePreview}
+                placeholder="e.g. Wheat Flour (Maida), Sugar, Palm Oil, Salt, INS 503, INS 322..."
+                placeholderTextColor="#B0B0B0"
+                multiline
+                numberOfLines={5}
+                textAlignVertical="top"
+              />
             </View>
           </View>
-        )}
 
-        {/* Submit */}
-        <TouchableOpacity
-          style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
-          onPress={handleSubmit}
-          disabled={submitting}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="checkmark-circle-outline" size={22} color="#FFFFFF" />
-          <Text style={styles.submitButtonText}>
-            {submitting ? 'Submitting...' : strings.submit}
-          </Text>
-        </TouchableOpacity>
+          {/* Live Preview */}
+          {preview && (
+            <View style={styles.previewCard}>
+              <Text style={[styles.previewTitle, F]}>Score Preview</Text>
+              <View style={styles.previewContent}>
+                <ScoreBadge grade={preview.grade} score={preview.score} size="small" />
+                <View style={styles.previewStats}>
+                  <Text style={[styles.previewStat, F]}>
+                    {preview.stats.totalIngredients} ingredients detected
+                  </Text>
+                  {preview.stats.harmfulAdditives > 0 && (
+                    <Text style={[styles.previewStat, F, { color: Colors.harmful }]}>
+                      {preview.stats.harmfulAdditives} harmful additive(s)
+                    </Text>
+                  )}
+                  {preview.stats.concerningAdditives > 0 && (
+                    <Text style={[styles.previewStat, F, { color: Colors.concerning }]}>
+                      {preview.stats.concerningAdditives} concerning additive(s)
+                    </Text>
+                  )}
+                </View>
+              </View>
+            </View>
+          )}
 
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.cancelButtonText}>{strings.cancel}</Text>
-        </TouchableOpacity>
+          {/* Submit */}
+          <TouchableOpacity
+            style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
+            onPress={handleSubmit}
+            disabled={submitting}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="checkmark-circle-outline" size={22} color="#FFFFFF" />
+            <Text style={[styles.submitButtonText, F]}>
+              {submitting ? 'Submitting...' : strings.submit}
+            </Text>
+          </TouchableOpacity>
 
-        <View style={styles.bottomPadding} />
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => router.back()}
+          >
+            <Text style={[styles.cancelButtonText, F]}>{strings.cancel}</Text>
+          </TouchableOpacity>
+
+          <View style={styles.bottomPadding} />
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -203,23 +231,47 @@ export default function AddProductScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: isWeb ? '#FAFAFA' : Colors.background,
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
     padding: 20,
+    ...(isWeb ? { alignItems: 'center' } : {}),
+  },
+  inner: {
+    width: '100%',
+    maxWidth: isWeb ? 520 : undefined,
+    ...(isWeb ? {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+      padding: 36,
+      marginTop: 16,
+    } : {}),
   },
   header: {
     alignItems: 'center',
     marginBottom: 24,
   },
+  headerIcon: {
+    ...(isWeb ? {
+      width: 48,
+      height: 48,
+      borderRadius: 12,
+      backgroundColor: '#E8F5E9',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 12,
+    } : {}),
+  },
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: Colors.text,
-    marginTop: 10,
+    marginTop: isWeb ? 0 : 10,
   },
   headerDesc: {
     fontSize: 14,
@@ -244,17 +296,18 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   input: {
-    backgroundColor: Colors.surface,
+    backgroundColor: isWeb ? '#F9FAFB' : Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 12,
+    borderColor: isWeb ? '#D1D5DB' : Colors.border,
+    borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
     color: Colors.text,
+    ...(isWeb ? { outlineStyle: 'none' } : {}),
   },
   inputDisabled: {
-    backgroundColor: Colors.divider,
+    backgroundColor: isWeb ? '#F3F4F6' : Colors.divider,
     color: Colors.textMuted,
   },
   inputMultiline: {
@@ -262,12 +315,12 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   previewCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
+    backgroundColor: isWeb ? '#F9FAFB' : Colors.surface,
+    borderRadius: 10,
     padding: 16,
     marginTop: 20,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: isWeb ? '#E5E7EB' : Colors.border,
   },
   previewTitle: {
     fontSize: 14,
@@ -293,34 +346,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.primary,
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: 14,
+    borderRadius: 10,
     marginTop: 24,
     gap: 8,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
+    ...(isWeb ? { cursor: 'pointer' } : {
+      shadowColor: Colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+      elevation: 3,
+    }),
   },
   submitButtonDisabled: {
     opacity: 0.6,
   },
   submitButtonText: {
     color: '#FFFFFF',
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600',
   },
   cancelButton: {
     alignItems: 'center',
     paddingVertical: 14,
     marginTop: 8,
+    ...(isWeb ? { cursor: 'pointer' } : {}),
   },
   cancelButtonText: {
     color: Colors.textMuted,
     fontSize: 15,
   },
   bottomPadding: {
-    height: 40,
+    height: isWeb ? 20 : 40,
   },
 });
