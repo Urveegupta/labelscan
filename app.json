@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "LabelScan",
-    "slug": "labelscan",
+    "name": "BiteCheck",
+    "slug": "bitecheck",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "scheme": "labelscan",
+    "scheme": "bitecheck",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "LabelScan needs camera access to scan product barcodes"
+        "NSCameraUsageDescription": "BiteCheck needs camera access to scan product barcodes"
       }
     },
     "android": {
@@ -34,7 +34,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "LabelScan needs camera access to scan product barcodes"
+          "cameraPermission": "BiteCheck needs camera access to scan product barcodes"
         }
       ],
       "expo-barcode-scanner",

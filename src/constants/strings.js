@@ -5,8 +5,8 @@
 
 const strings = {
   en: {
-    appName: 'LabelScan',
-    tagline: 'Know what you eat',
+    appName: 'BiteCheck',
+    tagline: 'Decode your food',
     scanProduct: 'Scan Product',
     recentScans: 'Recent Scans',
     searchProducts: 'Search products...',
@@ -44,7 +44,9 @@ const strings = {
     offlineNote: 'Offline — showing cached data',
     source: {
       api: 'Open Food Facts',
-      seed: 'LabelScan Database',
+      fatsecret: 'FatSecret',
+      upcitemdb: 'UPC ItemDB',
+      edamam: 'Edamam',
       local: 'Local Cache',
       user: 'Community Submitted',
     },

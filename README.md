@@ -1,4 +1,4 @@
-# LabelScan
+# BiteCheck
 
 A Yuka-style food product scanner for the Indian market. Scan barcodes to get instant health scores, ingredient analysis, and nutritional breakdowns for packaged food products.
 

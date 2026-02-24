@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Colors from '../../src/constants/colors';
 import strings from '../../src/constants/strings';
 import { lookupProduct } from '../../src/api/productService';
+import { getIngredientNutrientTags } from '../../src/engine/scoringEngine';
 import ScoreBadge from '../../src/components/ScoreBadge';
 import IngredientList from '../../src/components/IngredientList';
 import NutritionBreakdown from '../../src/components/NutritionBreakdown';
@@ -34,11 +35,19 @@ export default function ProductDetailScreen() {
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const result = await lookupProduct(barcode);
-      setProduct(result.product);
-      setScore(result.score);
-      setSource(result.source);
-      setLoading(false);
+      try {
+        const result = await lookupProduct(barcode);
+        setProduct(result.product);
+        setScore(result.score);
+        setSource(result.source);
+      } catch (err) {
+        console.warn('Product lookup crashed:', err);
+        setProduct(null);
+        setScore(null);
+        setSource(null);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, [barcode]);
@@ -118,10 +127,26 @@ export default function ProductDetailScreen() {
         {/* Score Breakdown */}
         <View style={styles.card}>
           <Text style={[styles.cardTitle, F]}>Score Breakdown</Text>
+          <Text style={[styles.cardHint, { marginTop: 0, marginBottom: 14 }, F]}>Score starts at 100 — here's what brought it down</Text>
           <View style={styles.scoreBar}>
-            <ScoreBarItem label="Additives" penalty={score.penalties.additive} max={40} />
-            <ScoreBarItem label="Nutrition" penalty={score.penalties.nutrition} max={30} />
-            <ScoreBarItem label="Processing" penalty={score.penalties.processing} max={15} />
+            <ScoreBarItem
+              label="Harmful Additives"
+              penalty={score.penalties.additive}
+              max={40}
+              desc={score.penalties.additive === 0 ? 'None detected' : `${score.stats.harmfulAdditives} harmful, ${score.stats.concerningAdditives} concerning found`}
+            />
+            <ScoreBarItem
+              label="Sugar, Salt & Fat"
+              penalty={score.penalties.nutrition}
+              max={30}
+              desc={score.penalties.nutrition === 0 ? 'Within healthy range' : score.penalties.nutrition <= 10 ? 'Slightly elevated levels' : score.penalties.nutrition <= 20 ? 'Moderately high levels' : 'Very high levels'}
+            />
+            <ScoreBarItem
+              label="Processing Level"
+              penalty={score.penalties.processing}
+              max={15}
+              desc={score.penalties.processing === 0 ? 'Minimal processing' : score.penalties.processing <= 5 ? 'Some additives detected' : 'Heavily processed'}
+            />
           </View>
           <View style={styles.statsRow}>
             <StatBadge value={score.stats.totalIngredients} label="Ingredients" color={Colors.textSecondary} />
@@ -133,7 +158,13 @@ export default function ProductDetailScreen() {
         {/* Nutrition */}
         <View style={styles.card}>
           <Text style={[styles.cardTitle, F]}>{strings.nutritionBreakdown}</Text>
-          <NutritionBreakdown breakdown={score.nutritionBreakdown} />
+          <Text style={[styles.cardHint, { marginTop: 0, marginBottom: 14 }, F]}>
+            {isWeb ? 'Click' : 'Tap'} any row to see contributing ingredients
+          </Text>
+          <NutritionBreakdown
+            breakdown={score.nutritionBreakdown}
+            ingredientTags={getIngredientNutrientTags(product.ingredients_text)}
+          />
         </View>
 
         {/* Ingredients */}
@@ -172,7 +203,7 @@ export default function ProductDetailScreen() {
   );
 }
 
-function ScoreBarItem({ label, penalty, max }) {
+function ScoreBarItem({ label, penalty, max, desc }) {
   const pct = max > 0 ? (penalty / max) * 100 : 0;
   const barColor = pct > 66 ? Colors.harmful : pct > 33 ? Colors.concerning : Colors.good;
 
@@ -180,11 +211,14 @@ function ScoreBarItem({ label, penalty, max }) {
     <View style={styles.scoreBarItem}>
       <View style={styles.scoreBarLabelRow}>
         <Text style={[styles.scoreBarLabel, F]}>{label}</Text>
-        <Text style={[styles.scoreBarValue, F]}>-{penalty}/{max}</Text>
+        <Text style={[styles.scoreBarValue, { color: barColor }, F]}>
+          {penalty === 0 ? 'No impact' : `−${penalty} pts`}
+        </Text>
       </View>
       <View style={styles.scoreBarTrack}>
         <View style={[styles.scoreBarFill, { width: `${pct}%`, backgroundColor: barColor }]} />
       </View>
+      {desc ? <Text style={[styles.scoreBarDesc, F]}>{desc}</Text> : null}
     </View>
   );
 }
@@ -376,7 +410,7 @@ const styles = StyleSheet.create({
   },
 
   // Score breakdown
-  scoreBarItem: { marginBottom: 10 },
+  scoreBarItem: { marginBottom: 14 },
   scoreBarLabelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -401,6 +435,11 @@ const styles = StyleSheet.create({
   scoreBarFill: {
     height: '100%',
     borderRadius: 3,
+  },
+  scoreBarDesc: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    marginTop: 4,
   },
   statsRow: {
     flexDirection: 'row',

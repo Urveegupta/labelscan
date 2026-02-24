@@ -135,9 +135,9 @@ export default function HomeScreen() {
           <View style={{ marginHorizontal: 20, marginTop: 24 }}>
             <Text style={{ fontSize: 16, fontWeight: '700', color: Colors.text, marginBottom: 12 }}>How it works</Text>
             {[
-              { icon: 'barcode-outline', bg: '#E8F5E9', color: Colors.primary, title: 'Scan a barcode', desc: 'Point your camera at any food product barcode' },
-              { icon: 'analytics-outline', bg: '#FFF3E0', color: Colors.accent, title: 'Get instant analysis', desc: 'See health score, ingredients breakdown, and nutrition info' },
-              { icon: 'people-outline', bg: '#E3F2FD', color: '#1976D2', title: 'Help build the database', desc: 'Add products not yet in our system' },
+              { icon: 'barcode-outline', bg: '#ECFDF5', color: Colors.primary, title: 'Scan a barcode', desc: 'Point your camera at any food product barcode' },
+              { icon: 'analytics-outline', bg: '#ECFDF5', color: Colors.primary, title: 'Get instant analysis', desc: 'See health score, ingredients breakdown, and nutrition info' },
+              { icon: 'people-outline', bg: '#ECFDF5', color: Colors.primary, title: 'Help build the database', desc: 'Add products not yet in our system' },
             ].map((t) => (
               <View key={t.title} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
                 <View style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: t.bg, justifyContent: 'center', alignItems: 'center', marginRight: 14 }}>
@@ -165,9 +165,9 @@ export default function HomeScreen() {
         <View style={styles.webNavInner}>
           <View style={styles.webNavBrand}>
             <View style={styles.webNavLogo}>
-              <Ionicons name="leaf" size={18} color="#FFFFFF" />
+              <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
             </View>
-            <Text style={styles.webNavTitle}>LabelScan</Text>
+            <Text style={styles.webNavTitle}>BiteCheck</Text>
           </View>
           <View style={styles.webNavLinks}>
             {stats && (
@@ -201,9 +201,9 @@ export default function HomeScreen() {
       {/* Hero */}
       <View style={styles.webHero}>
         <View style={styles.webHeroInner}>
-          <Text style={styles.webHeroTitle}>Know what you eat.</Text>
+          <Text style={styles.webHeroTitle}>What's really in your food?</Text>
           <Text style={styles.webHeroSub}>
-            Scan any Indian food product to see its health score, additives, and nutrition breakdown — instantly.
+            Scan any product, decode the label, and get a clear health score — in seconds.
           </Text>
 
           {/* Search bar — hero-style */}
@@ -282,23 +282,23 @@ export default function HomeScreen() {
               {
                 icon: 'barcode-outline',
                 color: Colors.primary,
-                bg: '#E8F5E9',
-                title: 'Look up any product',
-                desc: 'Enter a barcode or search by name to instantly find product details from our database.',
+                bg: '#ECFDF5',
+                title: '\uD83D\uDD0D Look up any product',
+                desc: 'Search by name or scan a barcode — we pull the details instantly.',
               },
               {
                 icon: 'shield-checkmark-outline',
-                color: Colors.accent,
-                bg: '#FFF3E0',
-                title: 'Health score A-E',
-                desc: 'Every product gets a clear health grade based on ingredients, additives, and nutrition data.',
+                color: Colors.primary,
+                bg: '#ECFDF5',
+                title: '\u2728 Health score A–E',
+                desc: 'Every product gets a clear grade based on what\'s actually inside.',
               },
               {
                 icon: 'people-outline',
-                color: '#1976D2',
-                bg: '#E3F2FD',
-                title: 'Community-driven',
-                desc: 'Help build India\'s largest open food database by adding products you find.',
+                color: Colors.primary,
+                bg: '#ECFDF5',
+                title: '\uD83E\uDD1D Community-powered',
+                desc: 'Don\'t see a product? Add it and help build India\'s food database.',
               },
             ].map((f) => (
               <View key={f.title} style={styles.webFeatureCard}>
@@ -316,7 +316,7 @@ export default function HomeScreen() {
       {/* Footer */}
       <View style={styles.webFooter}>
         <Text style={styles.webFooterText}>
-          LabelScan — Open-source food transparency for India
+          BiteCheck — Open-source food transparency for India
         </Text>
       </View>
     </ScrollView>
@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
     paddingBottom: 56,
     paddingHorizontal: 24,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: '#E2E8F0',
   },
   webHeroInner: {
     maxWidth: 640,
@@ -517,14 +517,14 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 24,
     marginLeft: 8,
     cursor: 'pointer',
   },
   webHeroBtnText: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
     ...WEB_FONT,
   },
 
@@ -594,7 +594,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingVertical: 8,
     paddingHorizontal: 20,
-    borderRadius: 8,
+    borderRadius: 24,
     backgroundColor: Colors.primary,
     cursor: 'pointer',
   },

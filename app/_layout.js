@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, Text, StyleSheet, Platform } from 'react-native';
-import { initDatabase, seedDatabase } from '../src/database/database';
+import { initDatabase } from '../src/database/database';
 import Colors from '../src/constants/colors';
 
 const isWeb = Platform.OS === 'web';
@@ -15,7 +15,6 @@ export default function RootLayout() {
     async function init() {
       try {
         await initDatabase();
-        await seedDatabase();
         setReady(true);
       } catch (err) {
         console.error('Database init error:', err);
@@ -29,7 +28,7 @@ export default function RootLayout() {
   if (!ready) {
     return (
       <View style={styles.loading}>
-        <Text style={styles.loadingText}>Loading LabelScan...</Text>
+        <Text style={styles.loadingText}>Loading BiteCheck...</Text>
         <StatusBar style="dark" />
       </View>
     );

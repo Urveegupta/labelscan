@@ -1,20 +1,20 @@
 export default {
-  primary: '#2E7D32',
-  primaryLight: '#60AD5E',
-  primaryDark: '#005005',
-  accent: '#FF6F00',
+  primary: '#10B981',
+  primaryLight: '#34D399',
+  primaryDark: '#059669',
+  accent: '#8B5CF6',
 
-  background: '#F5F5F5',
+  background: '#F8FAFC',
   surface: '#FFFFFF',
   card: '#FFFFFF',
 
-  text: '#212121',
-  textSecondary: '#757575',
+  text: '#0F172A',
+  textSecondary: '#64748B',
   textLight: '#FFFFFF',
-  textMuted: '#9E9E9E',
+  textMuted: '#94A3B8',
 
-  border: '#E0E0E0',
-  divider: '#EEEEEE',
+  border: '#E2E8F0',
+  divider: '#F1F5F9',
 
   gradeA: '#1B8A2A',
   gradeB: '#85BB2F',

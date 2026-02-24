@@ -1,5 +1,5 @@
 /**
- * LabelScan Scoring Engine
+ * BiteCheck Scoring Engine
  *
  * Standalone module that scores food products based on:
  * 1. Presence of harmful additives (INS numbers)
@@ -234,6 +234,20 @@ export function scoreProduct(product) {
     sugar_100g,
     salt_100g,
     saturated_fat_100g,
+    calories_100g,
+    protein_100g,
+    carbs_100g,
+    fat_100g,
+    fiber_100g,
+    serving_size,
+    calories_serving,
+    protein_serving,
+    carbs_serving,
+    fat_serving,
+    fiber_serving,
+    sugar_serving,
+    salt_serving,
+    saturated_fat_serving,
     additives_count,
   } = product;
 
@@ -295,24 +309,55 @@ export function scoreProduct(product) {
   else grade = GRADES.E;
 
   // 8. Nutrition breakdown
+  // Levels are computed from per-100g (standard for Nutri-Score thresholds).
+  // Per-serving values are passed through for display when available.
+  const hasServing = serving_size != null;
   const nutritionBreakdown = {
+    servingSize: serving_size || null,
+    calories: {
+      value: calories_100g,
+      valueServing: calories_serving ?? null,
+      level: calories_100g == null ? null : calories_100g > 400 ? 'high' : calories_100g > 200 ? 'moderate' : 'low',
+    },
+    protein: {
+      value: protein_100g,
+      valueServing: protein_serving ?? null,
+      level: protein_100g == null ? null : protein_100g >= 8 ? 'high' : protein_100g >= 3 ? 'moderate' : 'low',
+      inverted: true,
+    },
+    carbs: {
+      value: carbs_100g,
+      valueServing: carbs_serving ?? null,
+      level: carbs_100g == null ? null : carbs_100g > 60 ? 'high' : carbs_100g > 30 ? 'moderate' : 'low',
+    },
+    fat: {
+      value: fat_100g,
+      valueServing: fat_serving ?? null,
+      level: fat_100g == null ? null : fat_100g > 17 ? 'high' : fat_100g > 7 ? 'moderate' : 'low',
+    },
+    fiber: {
+      value: fiber_100g,
+      valueServing: fiber_serving ?? null,
+      level: fiber_100g == null ? null : fiber_100g >= 8 ? 'high' : fiber_100g >= 3 ? 'moderate' : 'low',
+      inverted: true,
+    },
     sugar: {
       value: sugar_100g,
-      unit: 'g/100g',
+      valueServing: sugar_serving ?? null,
       points: sugarPoints,
       maxPoints: 10,
       level: sugarPoints <= 3 ? 'low' : sugarPoints <= 6 ? 'moderate' : 'high',
     },
     salt: {
       value: salt_100g,
-      unit: 'g/100g',
+      valueServing: salt_serving ?? null,
       points: saltPoints,
       maxPoints: 10,
       level: saltPoints <= 3 ? 'low' : saltPoints <= 6 ? 'moderate' : 'high',
     },
     saturatedFat: {
       value: saturated_fat_100g,
-      unit: 'g/100g',
+      valueServing: saturated_fat_serving ?? null,
       points: satFatPoints,
       maxPoints: 10,
       level: satFatPoints <= 3 ? 'low' : satFatPoints <= 6 ? 'moderate' : 'high',
@@ -343,6 +388,44 @@ export function scoreProduct(product) {
       totalAdditives,
     },
   };
+}
+
+// ── Ingredient → Nutrient Tag Mapping ──
+
+const NUTRIENT_KEYWORDS = {
+  sugar: [/sugar/i, /jaggery/i, /honey/i, /syrup/i, /fructose/i, /glucose/i, /sucrose/i, /dextrose/i, /molasses/i],
+  salt: [/\bsalt\b/i, /sodium/i],
+  saturatedFat: [/palm oil/i, /coconut oil/i, /\bbutter\b/i, /\bghee\b/i, /\blard\b/i, /\bcream\b/i, /cocoa butter/i],
+  protein: [/\bmilk\b/i, /\bwhey\b/i, /\bcasein\b/i, /\bsoy\b/i, /\bdal\b/i, /\blentil/i, /chickpea/i, /\bpeanut/i, /\balmond/i, /\bcashew/i, /\begg\b/i, /\bpaneer\b/i],
+  fiber: [/whole wheat/i, /whole grain/i, /\boat/i, /\bbran\b/i, /fib[er]e?r/i, /\bdal\b/i, /\blentil/i, /chickpea/i],
+  carbs: [/wheat flour/i, /\bmaida\b/i, /\batta\b/i, /\brice\b/i, /\bcorn\b/i, /starch/i, /sugar/i, /maltodextrin/i, /semolina/i],
+  fat: [/\boil\b/i, /\bfat\b/i, /\bbutter\b/i, /\bghee\b/i, /\bcream\b/i, /margarine/i, /shortening/i],
+};
+
+/**
+ * Map parsed ingredients to nutrient categories.
+ * Returns { sugar: ['Sugar', 'Invert Syrup'], protein: ['Milk Solids'], ... }
+ */
+export function getIngredientNutrientTags(ingredientsStr) {
+  const ingredients = parseIngredients(ingredientsStr);
+  const tags = {};
+
+  for (const key of Object.keys(NUTRIENT_KEYWORDS)) {
+    tags[key] = [];
+  }
+
+  for (const ingredient of ingredients) {
+    for (const [nutrient, patterns] of Object.entries(NUTRIENT_KEYWORDS)) {
+      for (const pattern of patterns) {
+        if (pattern.test(ingredient)) {
+          tags[nutrient].push(ingredient);
+          break;
+        }
+      }
+    }
+  }
+
+  return tags;
 }
 
 export { RISK_LABELS, RISK_COLORS };

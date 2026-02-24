@@ -1,10 +1,7 @@
 /**
- * Web database layer for LabelScan.
+ * Web database layer for BiteCheck.
  * Uses localStorage as a lightweight replacement for expo-sqlite.
- * Same 8 exported functions as database.native.js.
  */
-
-import seedProducts from './seedData';
 
 const PRODUCTS_KEY = 'labelscan_products';
 const SUBMISSIONS_KEY = 'labelscan_submissions';
@@ -35,29 +32,6 @@ function saveSubmissions(submissions) {
 
 export async function initDatabase() {
   // No-op on web — localStorage is always ready
-}
-
-export async function seedDatabase() {
-  const products = getProducts();
-  const seedCount = Object.values(products).filter((p) => p.source === 'seed').length;
-
-  if (seedCount >= seedProducts.length) {
-    return { seeded: false, count: seedCount };
-  }
-
-  for (const product of seedProducts) {
-    if (!products[product.barcode]) {
-      products[product.barcode] = {
-        ...product,
-        source: 'seed',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-    }
-  }
-
-  saveProducts(products);
-  return { seeded: true, count: seedProducts.length };
 }
 
 export async function getProductByBarcode(barcode) {
@@ -131,7 +105,6 @@ export async function getDatabaseStats() {
   return {
     totalProducts: values.length,
     totalSubmissions: submissions.length,
-    seedProducts: values.filter((p) => p.source === 'seed').length,
     apiCached: values.filter((p) => p.source === 'api').length,
     userSubmitted: values.filter((p) => p.source === 'user').length,
   };
